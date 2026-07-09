@@ -1,16 +1,19 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { signInWithEmailAndPassword } from "firebase/auth";
 import { auth } from "@/lib/firebase";
 import { useRouter } from "next/navigation";
-import { motion } from "framer-motion";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { Loader2 } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
+import gsap from "gsap";
+import { useGSAP } from "@gsap/react";
+
+gsap.registerPlugin(useGSAP);
 
 export default function LoginPage() {
   const [email, setEmail] = useState("");
@@ -19,6 +22,54 @@ export default function LoginPage() {
   const [error, setError] = useState("");
   const router = useRouter();
   const { loginAsGuest } = useAuth();
+  
+  const containerRef = useRef<HTMLDivElement>(null);
+  const formCardRef = useRef<HTMLDivElement>(null);
+  const errorRef = useRef<HTMLDivElement>(null);
+
+  useGSAP(() => {
+    // Initial entrance animation
+    gsap.fromTo(formCardRef.current, 
+      { opacity: 0, y: 30, scale: 0.95 },
+      { 
+        opacity: 1, 
+        y: 0, 
+        scale: 1, 
+        duration: 0.8, 
+        ease: "power3.out"
+      }
+    );
+
+    // Subtle floating animation for the background blobs
+    gsap.to(".bg-blob-1", {
+      y: "random(-20, 20)",
+      x: "random(-20, 20)",
+      duration: 4,
+      repeat: -1,
+      yoyo: true,
+      ease: "sine.inOut"
+    });
+
+    gsap.to(".bg-blob-2", {
+      y: "random(-30, 30)",
+      x: "random(-30, 30)",
+      duration: 5,
+      repeat: -1,
+      yoyo: true,
+      ease: "sine.inOut",
+      delay: 1
+    });
+  }, { scope: containerRef });
+
+  // Animate error message when it appears/disappears
+  useGSAP(() => {
+    if (error && errorRef.current) {
+      gsap.fromTo(errorRef.current,
+        { opacity: 0, height: 0, scale: 0.95, marginBottom: 0 },
+        { opacity: 1, height: "auto", scale: 1, marginBottom: 24, duration: 0.4, ease: "back.out(1.5)" }
+      );
+    }
+  }, [error]);
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -36,16 +87,14 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center relative overflow-hidden">
+    <div ref={containerRef} className="min-h-screen flex items-center justify-center relative overflow-hidden">
       {/* Subtle ambient background blobs */}
-      <div className="absolute top-[-20%] left-[-10%] w-[50%] h-[50%] rounded-full bg-primary/20 blur-[120px] pointer-events-none" />
-      <div className="absolute bottom-[-20%] right-[-10%] w-[50%] h-[50%] rounded-full bg-secondary/20 blur-[120px] pointer-events-none" />
+      <div className="bg-blob-1 absolute top-[-20%] left-[-10%] w-[50%] h-[50%] rounded-full bg-primary/20 blur-[120px] pointer-events-none" />
+      <div className="bg-blob-2 absolute bottom-[-20%] right-[-10%] w-[50%] h-[50%] rounded-full bg-secondary/20 blur-[120px] pointer-events-none" />
       
-      <motion.div
-        initial={{ opacity: 0, y: 20, scale: 0.95 }}
-        animate={{ opacity: 1, y: 0, scale: 1 }}
-        transition={{ duration: 0.6, ease: [0.22, 1, 0.36, 1] }}
-        className="w-full max-w-md z-10 p-6"
+      <div
+        ref={formCardRef}
+        className="w-full max-w-md z-10 p-6 opacity-0"
       >
         <Card className="glass border-0">
           <CardHeader className="space-y-2 text-center pb-8">
@@ -55,13 +104,12 @@ export default function LoginPage() {
           <CardContent>
             <form onSubmit={handleLogin} className="space-y-6">
               {error && (
-                <motion.div 
-                  initial={{ opacity: 0, height: 0 }} 
-                  animate={{ opacity: 1, height: 'auto' }} 
-                  className="p-3 text-sm text-destructive-foreground bg-destructive/20 rounded-md border border-destructive/30"
+                <div 
+                  ref={errorRef}
+                  className="p-3 text-sm text-destructive-foreground bg-destructive/20 rounded-md border border-destructive/30 overflow-hidden"
                 >
                   {error}
-                </motion.div>
+                </div>
               )}
               <div className="space-y-2">
                 <Label htmlFor="email" className="text-xs uppercase tracking-wider text-muted-foreground font-medium">Email Address</Label>
@@ -120,7 +168,7 @@ export default function LoginPage() {
             </form>
           </CardContent>
         </Card>
-      </motion.div>
+      </div>
     </div>
   );
 }
