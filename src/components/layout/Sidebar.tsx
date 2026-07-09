@@ -17,6 +17,8 @@ import {
 import { signOut } from "firebase/auth";
 import { auth } from "@/lib/firebase";
 
+import { useAuth } from "@/contexts/AuthContext";
+
 const navItems = [
   { name: "Dashboard", href: "/", icon: LayoutDashboard },
   { name: "Curriculum", href: "/curriculum", icon: BookOpen },
@@ -29,9 +31,10 @@ const navItems = [
 
 export function Sidebar() {
   const pathname = usePathname();
+  const { logout } = useAuth();
 
   return (
-    <div className="w-64 border-r border-white/10 bg-black/40 backdrop-blur-xl h-screen flex flex-col fixed left-0 top-0">
+    <div className="w-64 border-r border-white/10 bg-black/40 backdrop-blur-xl h-screen flex flex-col fixed left-0 top-0 z-50">
       <div className="p-6">
         <h2 className="text-xl font-semibold tracking-tight text-white flex items-center gap-2">
           <div className="w-8 h-8 rounded-lg bg-primary/20 flex items-center justify-center border border-primary/50">
@@ -81,7 +84,7 @@ export function Sidebar() {
         <Button 
           variant="ghost" 
           className="w-full justify-start gap-3 text-muted-foreground hover:text-foreground hover:bg-white/5 rounded-xl"
-          onClick={() => signOut(auth)}
+          onClick={logout}
         >
           <LogOut className="w-4 h-4" />
           Sign Out
